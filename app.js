@@ -18,16 +18,14 @@ const db = getDatabase(app);
 // ── ✏️ EDITABLE: Friend names shown in the login dropdown ────────
 // Add, remove, or rename entries here. Order determines dropdown order.
 const FRIEND_NAMES = [
-  "Oran",
-  "Fionn",
-  "Cillian",
-  "Darragh",
-  "Eoin",
-  "Niall",
-  "Roisin",
-  "Aoife",
-  "Ciara",
-  "Conor"
+  "I played county minor",
+  "Connor Long Schlong Sommers",
+  "Tall Angry Ginge",
+  "Barry man shuffle",
+  "Waste of 6 foot",
+  "Harry hands up a dogs arse",
+  "Dylan O fannyFart",
+  "Runo hide your TechGraph box Ayovoro"
 ];
 
 // ── ✏️ EDITABLE: Unavailability reason categories ────────────────
@@ -36,7 +34,8 @@ const FRIEND_NAMES = [
 const UNAVAIL_REASONS = [
   "Work",
   "Holiday",
-  "Sport"
+  "Sport",
+  "Gay"
 ];
 
 // ── Date Range ──────────────────────────────────────────────────
