@@ -19,13 +19,13 @@ const db = getDatabase(app);
 // Add, remove, or rename entries here. Order determines dropdown order.
 const FRIEND_NAMES = [
   "I played county minor",
-  "Connor 'Long Schlong' Sommers",
+  "Connor \"Long Schlong \Sommers",
   "Tall Angry Ginge",
   "Barry man shuffle",
   "Waste of 6 foot",
-  "Harry 'hands up a dogs arse' O'Donnell",
+  "Harry \"hands up a dogs arse\" O'Donnell",
   "Dylan O'fannyFart",
-  "Runo 'hide your TechGraph box' Ayovoro"
+  "Runo \"hide your TechGraph box\" Ayovoro"
 ];
 
 // ── ✏️ EDITABLE: Unavailability reason categories ────────────────
