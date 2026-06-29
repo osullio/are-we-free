@@ -49,6 +49,7 @@
       </div>
       <div class="header-right">
         <button class="btn-ghost" onclick="showPage('group')">Group →</button>
+        <button class="btn-ghost" onclick="openAdminPage()">Admin</button>
         <button class="btn-ghost logout" onclick="logout()">↩</button>
       </div>
     </header>
@@ -94,6 +95,32 @@
         <p>Only shows people who've logged in at least once.</p>
       </div>
       <div id="group-grid" class="group-grid"></div>
+    </main>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       PAGE 4 — ADMIN VIEW
+       Read-only view of the full live state per date
+  ════════════════════════════════════════════ -->
+  <div id="page-admin" class="page">
+    <header class="app-header">
+      <div class="header-left">
+        <button class="btn-ghost" onclick="showPage('calendar')">← Back</button>
+      </div>
+      <div class="header-center">
+        <span class="app-title">Admin View</span>
+      </div>
+      <div class="header-right">
+        <button class="btn-ghost logout" onclick="logout()">↩</button>
+      </div>
+    </header>
+
+    <main class="group-main">
+      <div class="calendar-intro">
+        <h2>Live availability overview</h2>
+        <p>See who is free and who is busy for each day.</p>
+      </div>
+      <div id="admin-grid" class="group-grid"></div>
     </main>
   </div>
 

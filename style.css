@@ -260,6 +260,13 @@ html, body {
 .day-card.available  { border-color: var(--green); background: var(--green-light); }
 .day-card.unavailable { border-color: var(--red);   background: var(--red-light);  }
 
+.day-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
 .day-card .day-weekday {
   font-size: 10px;
   font-weight: 700;
@@ -267,6 +274,18 @@ html, body {
   letter-spacing: 0.5px;
   color: var(--text-muted);
 }
+
+.day-pill {
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.day-pill.available { background: var(--green-dark); color: white; }
+.day-pill.unavailable { background: var(--red); color: white; }
 
 .day-card.available   .day-weekday { color: var(--green-dark); opacity: 0.8; }
 .day-card.unavailable .day-weekday { color: var(--red);        opacity: 0.8; }
@@ -281,13 +300,6 @@ html, body {
 .day-card.available   .day-date { color: var(--green-dark); }
 .day-card.unavailable .day-date { color: var(--red); }
 
-.day-card .day-status-icon {
-  position: absolute;
-  top: 9px;
-  right: 9px;
-  font-size: 13px;
-}
-
 .day-card .day-reason {
   font-size: 10px;
   color: var(--red);
@@ -295,6 +307,11 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.day-card .day-reason.muted {
+  color: var(--text-sub);
+  opacity: 0.8;
 }
 
 .day-card .day-count {
@@ -397,6 +414,48 @@ html, body {
 
 .person-chip.free { background: var(--green-light); color: var(--green-dark); }
 .person-chip.busy { background: var(--red-light);   color: var(--red); }
+
+.admin-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  min-height: 96px;
+}
+
+.admin-row:last-child { border-bottom: none; }
+
+.admin-row-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 10px 10px 0;
+}
+
+.admin-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.admin-section-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.empty-state {
+  font-size: 11px;
+  color: var(--text-sub);
+}
 
 .no-data { font-size: 12px; color: var(--text-muted); }
 

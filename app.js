@@ -38,6 +38,7 @@ const UNAVAIL_REASONS = [
   "Gay"
 ];
 
+const ADMIN_PASSWORD = 'admin123';
 const MAX_PARTICIPANTS = FRIEND_NAMES.length;
 const FRIEND_NAME_SET = new Set(FRIEND_NAMES);
 const DEFAULT_USER_STATUS = Object.freeze({ available: true, reason: '' });
@@ -98,6 +99,7 @@ let modalDate    = null;  // The date currently open in the modal
 let modalAction  = null;  // "mark-unavailable" | "mark-available"
 let unsubscribe  = null;  // Firebase onValue cleanup function
 let selectedReason = null; // Currently highlighted reason button in modal
+let adminUnlocked = false;
 
 // ── Build Login Dropdown ─────────────────────────────────────────
 // Populates the <select> with the names from FRIEND_NAMES above
@@ -139,19 +141,36 @@ document.getElementById('name-select').addEventListener('keydown', e => {
 
 window.logout = function() {
   currentUser = null;
+  adminUnlocked = false;
   sessionStorage.removeItem('awf_user');
   if (unsubscribe) { unsubscribe(); unsubscribe = null; }
   document.getElementById('name-select').value = '';
   showPage('login');
 };
 
+window.openAdminPage = function() {
+  if (adminUnlocked) {
+    showPage('admin');
+    return;
+  }
+
+  const password = prompt('Enter admin password');
+  if (password === null) return;
+  if (password === ADMIN_PASSWORD) {
+    adminUnlocked = true;
+    showPage('admin');
+  } else {
+    alert('Incorrect admin password');
+  }
+};
+
 // ── Page Navigation ─────────────────────────────────────────────
 window.showPage = function(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const map = { login: 'page-login', calendar: 'page-calendar', group: 'page-group' };
+  const map = { login: 'page-login', calendar: 'page-calendar', group: 'page-group', admin: 'page-admin' };
   document.getElementById(map[page]).classList.add('active');
-  // Re-render the group view each time it's opened so it's always fresh
   if (page === 'group') renderGroupView();
+  if (page === 'admin') renderAdminView();
 };
 
 // ── Firebase: Live Sync ──────────────────────────────────────────
@@ -163,6 +182,9 @@ function subscribeToData() {
     renderCalendar();
     if (document.getElementById('page-group').classList.contains('active')) {
       renderGroupView();
+    }
+    if (document.getElementById('page-admin').classList.contains('active')) {
+      renderAdminView();
     }
   }, err => console.error('Firebase error:', err));
 }
@@ -203,10 +225,14 @@ function renderGrid(containerId, dates) {
     card.onclick   = () => openModal(date, isAvailable);
 
     card.innerHTML = `
-      <span class="day-weekday">${WEEKDAYS[date.getDay()]}</span>
+      <div class="day-top-row">
+        <span class="day-weekday">${WEEKDAYS[date.getDay()]}</span>
+        <span class="day-pill ${isAvailable ? 'available' : 'unavailable'}">${isAvailable ? 'Free' : 'Busy'}</span>
+      </div>
       <span class="day-date">${date.getDate()}</span>
-      <span class="day-status-icon">${isAvailable ? '✓' : '✗'}</span>
-      ${!isAvailable && reason ? `<span class="day-reason">${reason}</span>` : ''}
+      ${!isAvailable && reason
+        ? `<span class="day-reason">${reason}</span>`
+        : `<span class="day-reason muted">Tap to change</span>`}
       <span class="day-count">${availableCount}/${totalConfirmed} free</span>
     `;
     container.appendChild(card);
@@ -283,6 +309,65 @@ window.confirmModal = async function() {
   await set(ref(db, `availability/${key}/${currentUser}`), { available: isAvailable, reason });
   closeModalDirect();
 };
+
+// ── Render: Admin View ───────────────────────────────────────────
+function renderAdminView() {
+  const container = document.getElementById('admin-grid');
+  container.innerHTML = '';
+  let lastMonth = null;
+
+  for (const date of ALL_DATES) {
+    const key = dateKey(date);
+    const dayData = allData[key] || {};
+    const entries = Object.entries(dayData).sort((a, b) => a[0].localeCompare(b[0]));
+    const availablePeople = entries.filter(([, status]) => status.available).map(([name]) => name);
+    const unavailablePeople = entries.filter(([, status]) => !status.available).map(([name, status]) => ({
+      name,
+      reason: status.reason || ''
+    }));
+    const ratio = MAX_PARTICIPANTS > 0 ? availablePeople.length / MAX_PARTICIPANTS : 0;
+    const countClass = ratio >= 0.7 ? 'high' : ratio >= 0.4 ? 'mid' : 'low';
+
+    const month = date.getMonth();
+    if (month !== lastMonth) {
+      const header = document.createElement('div');
+      header.className = 'group-month-header';
+      header.textContent = `${MONTHS[month]} 2026`;
+      container.appendChild(header);
+      lastMonth = month;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'admin-row';
+
+    const day = date.getDate();
+    const availableHtml = availablePeople.length > 0
+      ? availablePeople.map(name => `<span class="person-chip free">${name}</span>`).join('')
+      : '<span class="empty-state">No one available</span>';
+    const unavailableHtml = unavailablePeople.length > 0
+      ? unavailablePeople.map(({ name, reason }) => `<span class="person-chip busy">${name}${reason ? ` · ${reason}` : ''}</span>`).join('')
+      : '<span class="empty-state">No one marked busy</span>';
+
+    row.innerHTML = `
+      <div class="group-row-date">
+        <span class="g-weekday">${WEEKDAYS[date.getDay()]}</span>
+        <span class="g-date">${ordinal(day)} ${MONTHS[month].slice(0,3)}</span>
+      </div>
+      <div class="group-row-count ${countClass}">${availablePeople.length}/${MAX_PARTICIPANTS}</div>
+      <div class="admin-row-body">
+        <div class="admin-section">
+          <span class="admin-section-title">Available</span>
+          <div class="admin-section-content">${availableHtml}</div>
+        </div>
+        <div class="admin-section">
+          <span class="admin-section-title">Busy</span>
+          <div class="admin-section-content">${unavailableHtml}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(row);
+  }
+}
 
 // ── Render: Group Overview ───────────────────────────────────────
 function renderGroupView() {
