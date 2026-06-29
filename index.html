@@ -2,29 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <!-- Ensures the app fills the phone screen correctly and disables zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <!-- Makes the app feel native when added to iPhone/Android home screen -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <title>Are We Free?</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <!-- LOGIN PAGE -->
+  <!-- ════════════════════════════════════════════
+       PAGE 1 — LOGIN
+       User picks their name from a dropdown
+  ════════════════════════════════════════════ -->
   <div id="page-login" class="page active">
     <div class="login-wrapper">
       <div class="login-card">
         <div class="login-icon">📅</div>
         <h1>Are We Free?</h1>
-        <p class="login-sub">Enter your first name to see who's available this summer.</p>
-        <div class="input-group">
-          <input type="text" id="name-input" placeholder="Your first name" maxlength="20" autocomplete="off" />
-          <button id="login-btn" onclick="handleLogin()">Let's go →</button>
+        <p class="login-sub">Who are you?</p>
+
+        <!-- Name dropdown — populated from FRIEND_NAMES in app.js -->
+        <div class="select-wrap">
+          <select id="name-select">
+            <option value="">— Select your name —</option>
+          </select>
         </div>
-        <p class="login-hint">No account needed — just your name.</p>
+
+        <button id="login-btn" onclick="handleLogin()">Let's go →</button>
+        <p class="login-hint">No account needed.</p>
       </div>
     </div>
   </div>
 
-  <!-- CALENDAR PAGE -->
+  <!-- ════════════════════════════════════════════
+       PAGE 2 — PERSONAL CALENDAR
+       User sees all dates; taps to toggle availability
+  ════════════════════════════════════════════ -->
   <div id="page-calendar" class="page">
     <header class="app-header">
       <div class="header-left">
@@ -32,15 +48,15 @@
         <span id="header-name" class="header-name"></span>
       </div>
       <div class="header-right">
-        <button class="btn-ghost" onclick="showPage('group')">Group View →</button>
-        <button class="btn-ghost logout" onclick="logout()">Change name</button>
+        <button class="btn-ghost" onclick="showPage('group')">Group →</button>
+        <button class="btn-ghost logout" onclick="logout()">↩</button>
       </div>
     </header>
 
     <main class="calendar-main">
       <div class="calendar-intro">
         <h2>Your Availability</h2>
-        <p>You're marked <strong>available</strong> by default. Tap any day you <em>can't</em> make it to mark yourself unavailable.</p>
+        <p>You're <strong>available</strong> by default. Tap a day you <em>can't</em> make it.</p>
       </div>
 
       <div class="month-block">
@@ -55,38 +71,48 @@
     </main>
   </div>
 
-  <!-- GROUP VIEW PAGE -->
+  <!-- ════════════════════════════════════════════
+       PAGE 3 — GROUP OVERVIEW
+       Read-only view of everyone's availability
+  ════════════════════════════════════════════ -->
   <div id="page-group" class="page">
     <header class="app-header">
       <div class="header-left">
         <button class="btn-ghost" onclick="showPage('calendar')">← Back</button>
       </div>
       <div class="header-center">
-        <span class="app-title">Group Overview</span>
+        <span class="app-title">Group View</span>
       </div>
       <div class="header-right">
-        <button class="btn-ghost logout" onclick="logout()">Change name</button>
+        <button class="btn-ghost logout" onclick="logout()">↩</button>
       </div>
     </header>
 
     <main class="group-main">
       <div class="calendar-intro">
         <h2>Who's Free When?</h2>
-        <p>Only counts people who have logged in and confirmed their availability.</p>
+        <p>Only shows people who've logged in at least once.</p>
       </div>
       <div id="group-grid" class="group-grid"></div>
     </main>
   </div>
 
-  <!-- MODAL -->
+  <!-- ════════════════════════════════════════════
+       MODAL — Mark day unavailable / available
+       Appears as a bottom sheet on mobile
+  ════════════════════════════════════════════ -->
   <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModal(event)">
     <div class="modal-card">
       <h3 id="modal-title"></h3>
       <p id="modal-status-text"></p>
+
+      <!-- Only shown when marking unavailable -->
       <div id="modal-unavailable-section">
-        <label for="modal-reason">Reason <span class="optional">(optional)</span></label>
-        <input type="text" id="modal-reason" placeholder="e.g. Holiday, Work, Other..." maxlength="60" />
+        <label>Reason <span class="optional">(optional)</span></label>
+        <!-- Buttons built from UNAVAIL_REASONS list in app.js -->
+        <div id="reason-buttons" class="reason-buttons"></div>
       </div>
+
       <div class="modal-actions">
         <button id="modal-confirm-btn" onclick="confirmModal()">Confirm</button>
         <button class="btn-secondary" onclick="closeModalDirect()">Cancel</button>
