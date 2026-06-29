@@ -38,6 +38,10 @@ const UNAVAIL_REASONS = [
   "Gay"
 ];
 
+const MAX_PARTICIPANTS = FRIEND_NAMES.length;
+const FRIEND_NAME_SET = new Set(FRIEND_NAMES);
+const DEFAULT_USER_STATUS = Object.freeze({ available: true, reason: '' });
+
 // ── Date Range ──────────────────────────────────────────────────
 // Last 2 weeks of July: July 18–31
 // First 2 weeks of August: Aug 1–14
@@ -56,6 +60,29 @@ const MONTHS    = ['January','February','March','April','May','June',
 // Produces a sortable string key for each date, e.g. "2026-07-18"
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+
+function normalizeDayData(dayData = {}) {
+  const normalized = {};
+  Object.entries(dayData).forEach(([name, status]) => {
+    if (!FRIEND_NAME_SET.has(name)) return;
+    normalized[name] = {
+      available: Boolean(status?.available),
+      reason: typeof status?.reason === 'string' ? status.reason : ''
+    };
+  });
+  return normalized;
+}
+
+function normalizeAvailabilityData(data = {}) {
+  const normalized = {};
+  Object.entries(data).forEach(([date, dayData]) => {
+    const normalizedDayData = normalizeDayData(dayData);
+    if (Object.keys(normalizedDayData).length > 0) {
+      normalized[date] = normalizedDayData;
+    }
+  });
+  return normalized;
 }
 
 // Returns "1st", "2nd", "3rd", "4th" etc.
@@ -86,7 +113,7 @@ function buildNameDropdown() {
 }
 
 // ── Login ───────────────────────────────────────────────────────
-window.handleLogin = function() {
+window.handleLogin = async function() {
   const select = document.getElementById('name-select');
   const name   = select.value;
   if (!name) { select.focus(); return; }
@@ -94,6 +121,13 @@ window.handleLogin = function() {
   currentUser = name;
   sessionStorage.setItem('awf_user', name);
   document.getElementById('header-name').textContent = name;
+
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+
+  await initializeCurrentUserData();
   showPage('calendar');
   subscribeToData();
 };
@@ -125,20 +159,20 @@ window.showPage = function(page) {
 function subscribeToData() {
   const dbRef = ref(db, 'availability');
   unsubscribe = onValue(dbRef, snapshot => {
-    allData = snapshot.val() || {};
+    allData = normalizeAvailabilityData(snapshot.val() || {});
     renderCalendar();
-    ensureUserRegistered(); // write defaults for any missing dates
+    if (document.getElementById('page-group').classList.contains('active')) {
+      renderGroupView();
+    }
   }, err => console.error('Firebase error:', err));
 }
 
-// Writes { available: true, reason: '' } for every date this user hasn't touched yet
-async function ensureUserRegistered() {
+// Overwrites this user's data for every date so each login refreshes their slot
+async function initializeCurrentUserData() {
   if (!currentUser) return;
   for (const date of ALL_DATES) {
     const key = dateKey(date);
-    if (!allData[key]?.[currentUser]) {
-      await set(ref(db, `availability/${key}/${currentUser}`), { available: true, reason: '' });
-    }
+    await set(ref(db, `availability/${key}/${currentUser}`), DEFAULT_USER_STATUS);
   }
 }
 
@@ -159,10 +193,10 @@ function renderGrid(containerId, dates) {
     const isAvailable = !myStatus || myStatus.available;
     const reason      = myStatus?.reason || '';
 
-    // Count how many confirmed-logged-in people are available this day
-    const people         = Object.values(dayData);
-    const availableCount = people.filter(p => p.available).length;
-    const totalConfirmed = people.length;
+    // Count how many of the 8 allowed people are available this day
+    const people         = Object.entries(dayData);
+    const availableCount = people.filter(([, p]) => p.available).length;
+    const totalConfirmed = MAX_PARTICIPANTS;
 
     const card = document.createElement('div');
     card.className = `day-card ${isAvailable ? 'available' : 'unavailable'}`;
@@ -262,7 +296,7 @@ function renderGroupView() {
     const people   = Object.entries(dayData);
 
     const availableCount = people.filter(([, p]) => p.available).length;
-    const totalConfirmed = people.length;
+    const totalConfirmed = MAX_PARTICIPANTS;
 
     // Month separator header
     const month = date.getMonth();
@@ -311,6 +345,7 @@ const savedUser = sessionStorage.getItem('awf_user');
 if (savedUser && FRIEND_NAMES.includes(savedUser)) {
   currentUser = savedUser;
   document.getElementById('header-name').textContent = savedUser;
+  initializeCurrentUserData();
   showPage('calendar');
   subscribeToData();
 }
